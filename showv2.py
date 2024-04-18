@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 import socket
 import ipaddress
 import requests
@@ -87,7 +88,7 @@ def get_current_location():
             geolocation_label.config(text=location_info)
 
             # Construct the URL for Google Static Maps API
-            url = f"https://maps.googleapis.com/maps/api/staticmap?center={location.lat},{location.lng}&zoom=13&size=640x480&maptype=roadmap&key={API_KEY}"
+            url = f"https://maps.googleapis.com/maps/api/staticmap?center={location.lat},{location.lng}&zoom=13&size=320x240&maptype=roadmap&key={API_KEY}"
 
             # Download the map image
             urllib.request.urlretrieve(url, "current_location_map.jpg")
@@ -96,21 +97,30 @@ def get_current_location():
             img = Image.open("current_location_map.jpg")
             
             # Resize the image to fit the window size
-            width, height = 640, 480  # Set desired width and height
+            width, height = 320, 240  # Set desired width and height
             img = img.resize((width, height), Image.BILINEAR)
 
             # Convert the Image object to a Tkinter-compatible photo image
             location_image = ImageTk.PhotoImage(img)
             
-            # Create a label to display the location image
-            location_image_label = tk.Label(root, image=location_image)
-            location_image_label.pack()
+            # Update the label to display the location image
+            location_image_label.config(image=location_image)
             location_image_label.image = location_image  # Keep a reference to avoid garbage collection
 
         else:
             geolocation_label.config(text="Unable to retrieve current location")
     except Exception as e:
         geolocation_label.config(text="Error: " + str(e))
+
+def login():
+    username = username_entry.get()
+    password = password_entry.get()
+
+    if username == "admin" and password == "admin":
+        login_window.destroy()  # Destroy the login window after successful login
+        root.deiconify()
+    else:
+        messagebox.showerror("Login failed", "Invalid username or password")
 
 # Create the main window
 root = tk.Tk()
@@ -121,7 +131,7 @@ try:
     img = Image.open("C:/Users/Ching/Documents/DevOps/V1.jpg")
 
     # Resize the image to fit the window size
-    width, height = root.winfo_screenwidth(), root.winfo_screenheight()
+    width, height = root.winfo_screenwidth(), root.winfo_screenheight()  # Set desired width and height
     img = img.resize((width, height), Image.BILINEAR)
 
     # Convert the Image object to a Tkinter-compatible photo image
@@ -132,28 +142,55 @@ except Exception as e:
     print("Error loading background image:", e)
 
 # Create a label to display IPv4 addresses
-ipv4_label = tk.Label(root, text="")
+ipv4_label = tk.Label(root, text="", font=("Arial", 12))
 ipv4_label.pack(pady=10)
 
 # Create buttons to show current IPv4
-get_ipv4_button = tk.Button(root, text="Show Current IPv4", command=lambda: get_current_ip("Ethernet"))  # Change "Ethernet" to your network interface name
+get_ipv4_button = tk.Button(root, text="Show Current IPv4", command=lambda: get_current_ip("Ethernet"), font=("Arial", 12))  # Change "Ethernet" to your network interface name
 get_ipv4_button.pack()
 
 # Create a label to display IPv6 addresses
-ipv6_label = tk.Label(root, text="")
+ipv6_label = tk.Label(root, text="", font=("Arial", 12))
 ipv6_label.pack(pady=10)
 
 # Create buttons to show current IPv6
-get_ipv6_button = tk.Button(root, text="Show Current IPv6", command=get_ipv6_address)
+get_ipv6_button = tk.Button(root, text="Show Current IPv6", command=get_ipv6_address, font=("Arial", 12))
 get_ipv6_button.pack()
 
 # Create a label to display geolocation information
-geolocation_label = tk.Label(root, text="")
+geolocation_label = tk.Label(root, text="", font=("Arial", 12))
 geolocation_label.pack(pady=10)
 
 # Button to fetch current location
-get_current_location_button = tk.Button(root, text="Get Current Location", command=get_current_location)
+get_current_location_button = tk.Button(root, text="Get Current Location", command=get_current_location, font=("Arial", 12))
 get_current_location_button.pack()
+
+# Create a label to display the location image
+location_image_label = tk.Label(root, font=("Arial", 12))
+location_image_label.pack()
+
+# Hide the main window initially
+root.withdraw()
+
+# Create login window
+login_window = tk.Toplevel(root)
+login_window.title("Login")
+
+# Username label and entry
+username_label = tk.Label(login_window, text="Username:", font=("Arial", 12))
+username_label.grid(row=0, column=0, padx=10, pady=5, sticky="e")
+username_entry = tk.Entry(login_window, font=("Arial", 12))
+username_entry.grid(row=0, column=1, padx=10, pady=5)
+
+# Password label and entry
+password_label = tk.Label(login_window, text="Password:", font=("Arial", 12))
+password_label.grid(row=1, column=0, padx=10, pady=5, sticky="e")
+password_entry = tk.Entry(login_window, show="*", font=("Arial", 12))
+password_entry.grid(row=1, column=1, padx=10, pady=5)
+
+# Login button
+login_button = tk.Button(login_window, text="Login", command=login, font=("Arial", 12))
+login_button.grid(row=2, column=1, pady=10)
 
 # Run the Tkinter event loop
 root.mainloop()
