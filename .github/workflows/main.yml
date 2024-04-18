@@ -3,7 +3,11 @@ name: My Workflow
 on:
   push:
     branches:
-      - master
+      - Trial-2
+      - Trial-3
+      - Adding-Geolocation
+      - Adding-User-Login
+      - Adding-User-Login
 
 jobs:
   build:
