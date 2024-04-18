@@ -1,14 +1,14 @@
 import tkinter as tk
-from tkinter import simpledialog
 import socket
 import ipaddress
 import requests
 import psutil
 from PIL import Image, ImageTk
 import geocoder
+import urllib.request
 
 # Google Maps Geocoding API key
-API_KEY = "AIzaSyAxCMaK-7N1SwNX2WiKhrH6acZyBi8fxMQ"
+API_KEY = "AIzaSyDhSP746m4Au8CgZBZUMBjtPL2nfNTr2mQ"
 
 def print_network_interfaces():
     for interface, addrs in psutil.net_if_addrs().items():
@@ -85,6 +85,28 @@ def get_current_location():
             else:
                 location_info = f"Your Current Location:\nLatitude: {location.lat}\nLongitude: {location.lng}\nCity: {location.city}"
             geolocation_label.config(text=location_info)
+
+            # Construct the URL for Google Static Maps API
+            url = f"https://maps.googleapis.com/maps/api/staticmap?center={location.lat},{location.lng}&zoom=13&size=640x480&maptype=roadmap&key={API_KEY}"
+
+            # Download the map image
+            urllib.request.urlretrieve(url, "current_location_map.jpg")
+
+            # Open the downloaded image
+            img = Image.open("current_location_map.jpg")
+            
+            # Resize the image to fit the window size
+            width, height = 640, 480  # Set desired width and height
+            img = img.resize((width, height), Image.BILINEAR)
+
+            # Convert the Image object to a Tkinter-compatible photo image
+            location_image = ImageTk.PhotoImage(img)
+            
+            # Create a label to display the location image
+            location_image_label = tk.Label(root, image=location_image)
+            location_image_label.pack()
+            location_image_label.image = location_image  # Keep a reference to avoid garbage collection
+
         else:
             geolocation_label.config(text="Unable to retrieve current location")
     except Exception as e:
