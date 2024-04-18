@@ -1,30 +1,63 @@
 import tkinter as tk
+from tkinter import simpledialog
 import socket
 import ipaddress
+import requests
+import psutil
+from PIL import Image, ImageTk
 
-def get_current_ip():
-    # Get the current IPv4 address and subnet mask of the machine
-    ipv4_address = socket.gethostbyname(socket.gethostname())
-    ipv4_subnet_mask = socket.inet_ntoa(socket.inet_aton('255.255.255.0'))
-    
-    # Determine the IP class
-    first_octet = int(ipv4_address.split('.')[0])
-    if 1 <= first_octet <= 126:
-        ipv4_class = 'A'
-    elif 128 <= first_octet <= 191:
-        ipv4_class = 'B'
-    elif 192 <= first_octet <= 223:
-        ipv4_class = 'C'
-    elif 224 <= first_octet <= 239:
-        ipv4_class = 'D (Multicast)'
-    elif 240 <= first_octet <= 255:
-        ipv4_class = 'E (Reserved)'
-    else:
-        ipv4_class = 'Unknown'
+# Google Maps Geocoding API key
+API_KEY = "AIzaSyAxCMaK-7N1SwNX2WiKhrH6acZyBi8fxMQ"
 
-    # Display IPv4 information with breaks
-    ipv4_info = "Current IPv4 address: " + ipv4_address + "\n(IPv4), Subnet Mask: " + ipv4_subnet_mask + "\nClass: " + ipv4_class
-    ipv4_label.config(text=ipv4_info)
+def print_network_interfaces():
+    for interface, addrs in psutil.net_if_addrs().items():
+        print(f"Interface: {interface}")
+        for addr in addrs:
+            print(f"- Address: {addr.address}")
+            print(f"  Family: {addr.family}")
+            print(f"  Broadcast: {addr.broadcast}")
+            print(f"  Netmask: {addr.netmask}")
+            print(f"  PTY: {addr.ptp}")
+            print(f"  MAC: {addr.address}")
+        print()
+
+def get_current_ip(target_interface):
+    try:
+        ip_address = ""
+        for interface, addrs in psutil.net_if_addrs().items():
+            if interface == target_interface:
+                for addr in addrs:
+                    if addr.family == socket.AF_INET:
+                        ip_address = addr.address
+                        break
+                if ip_address:
+                    break
+        
+        if ip_address:
+            ipv4_subnet_mask = socket.inet_ntoa(socket.inet_aton('255.255.255.0'))
+            
+            # Determine the IP class
+            first_octet = int(ip_address.split('.')[0])
+            if 1 <= first_octet <= 126:
+                ipv4_class = 'A'
+            elif 128 <= first_octet <= 191:
+                ipv4_class = 'B'
+            elif 192 <= first_octet <= 223:
+                ipv4_class = 'C'
+            elif 224 <= first_octet <= 239:
+                ipv4_class = 'D (Multicast)'
+            elif 240 <= first_octet <= 255:
+                ipv4_class = 'E (Reserved)'
+            else:
+                ipv4_class = 'Unknown'
+
+            # Display IPv4 information with breaks
+            ipv4_info = "Current IPv4 address: " + ip_address + "\n(IPv4), Subnet Mask: " + ipv4_subnet_mask + "\nClass: " + ipv4_class
+            ipv4_label.config(text=ipv4_info)
+        else:
+            ipv4_label.config(text=f"No IPv4 address found for interface '{target_interface}'")
+    except Exception as e:
+        ipv4_label.config(text="Error: " + str(e))
 
 def get_ipv6_address():
     # Get the current IPv6 address of the machine
@@ -39,16 +72,71 @@ def get_ipv6_address():
     else:
         ipv6_label.config(text="No IPv6 address found")
 
+def get_geolocation():
+    try:
+        # Get the current IPv4 address using psutil
+        ip_address = ""
+        for interface, addrs in psutil.net_if_addrs().items():
+            for addr in addrs:
+                if addr.family == socket.AF_INET:
+                    ip_address = addr.address
+                    break
+            if ip_address:
+                break
+
+        if ip_address:
+            # Construct the API URL
+            url = f"https://maps.googleapis.com/maps/api/geocode/json?key={API_KEY}&address={ip_address}"
+
+            # Fetch geolocation data
+            response = requests.get(url)
+            data = response.json()
+
+            # Check if the response status is OK
+            if data.get('status') == 'OK':
+                # Extract relevant information
+                result = data['results'][0]
+                formatted_address = result['formatted_address']
+                location = result['geometry']['location']
+                latitude = location['lat']
+                longitude = location['lng']
+
+                # Display geolocation information
+                geolocation_info = f"Formatted Address: {formatted_address}\nLatitude: {latitude}\nLongitude: {longitude}"
+                geolocation_label.config(text=geolocation_info)
+            else:
+                # If status is not OK, display error message
+                geolocation_label.config(text=f"Error: {data.get('status')}")
+        else:
+            geolocation_label.config(text="Unable to retrieve IPv4 address")
+    except Exception as e:
+        geolocation_label.config(text="Error: " + str(e))
+
 # Create the main window
 root = tk.Tk()
 root.title("IP Address Viewer")
+
+try:
+    # Open the image file
+    img = Image.open("C:/Users/Ching/Documents/DevOps/V1.jpg")
+
+    # Resize the image to fit the window size
+    width, height = root.winfo_screenwidth(), root.winfo_screenheight()
+    img = img.resize((width, height), Image.BILINEAR)
+
+    # Convert the Image object to a Tkinter-compatible photo image
+    background_image = ImageTk.PhotoImage(img)
+    background_label = tk.Label(root, image=background_image)
+    background_label.place(x=0, y=0, relwidth=1, relheight=1)
+except Exception as e:
+    print("Error loading background image:", e)
 
 # Create a label to display IPv4 addresses
 ipv4_label = tk.Label(root, text="")
 ipv4_label.pack(pady=10)
 
 # Create buttons to show current IPv4
-get_ipv4_button = tk.Button(root, text="Show Current IPv4", command=get_current_ip)
+get_ipv4_button = tk.Button(root, text="Show Current IPv4", command=lambda: get_current_ip("Ethernet"))  # Change "Ethernet" to your network interface name
 get_ipv4_button.pack()
 
 # Create a label to display IPv6 addresses
@@ -58,6 +146,14 @@ ipv6_label.pack(pady=10)
 # Create buttons to show current IPv6
 get_ipv6_button = tk.Button(root, text="Show Current IPv6", command=get_ipv6_address)
 get_ipv6_button.pack()
+
+# Create a label to display geolocation information
+geolocation_label = tk.Label(root, text="")
+geolocation_label.pack(pady=10)
+
+# Button to fetch geolocation for specific IP addresses
+get_geolocation_button = tk.Button(root, text="Get Geolocation for Specific IP", command=get_geolocation)
+get_geolocation_button.pack()
 
 # Run the Tkinter event loop
 root.mainloop()
