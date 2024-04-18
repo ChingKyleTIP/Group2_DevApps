@@ -5,6 +5,7 @@ import ipaddress
 import requests
 import psutil
 from PIL import Image, ImageTk
+import geocoder
 
 # Google Maps Geocoding API key
 API_KEY = "AIzaSyAxCMaK-7N1SwNX2WiKhrH6acZyBi8fxMQ"
@@ -72,43 +73,20 @@ def get_ipv6_address():
     else:
         ipv6_label.config(text="No IPv6 address found")
 
-def get_geolocation():
+def get_current_location():
     try:
-        # Get the current IPv4 address using psutil
-        ip_address = ""
-        for interface, addrs in psutil.net_if_addrs().items():
-            for addr in addrs:
-                if addr.family == socket.AF_INET:
-                    ip_address = addr.address
-                    break
-            if ip_address:
-                break
+        # Get current location using geocoder
+        location = geocoder.ip('me')
 
-        if ip_address:
-            # Construct the API URL
-            url = f"https://maps.googleapis.com/maps/api/geocode/json?key={API_KEY}&address={ip_address}"
-
-            # Fetch geolocation data
-            response = requests.get(url)
-            data = response.json()
-
-            # Check if the response status is OK
-            if data.get('status') == 'OK':
-                # Extract relevant information
-                result = data['results'][0]
-                formatted_address = result['formatted_address']
-                location = result['geometry']['location']
-                latitude = location['lat']
-                longitude = location['lng']
-
-                # Display geolocation information
-                geolocation_info = f"Formatted Address: {formatted_address}\nLatitude: {latitude}\nLongitude: {longitude}"
-                geolocation_label.config(text=geolocation_info)
+        if location.ok:
+            # Display location information
+            if hasattr(location, 'region'):
+                location_info = f"Your Current Location:\nLatitude: {location.lat}\nLongitude: {location.lng}\nCity: {location.city}\nRegion: {location.region}"
             else:
-                # If status is not OK, display error message
-                geolocation_label.config(text=f"Error: {data.get('status')}")
+                location_info = f"Your Current Location:\nLatitude: {location.lat}\nLongitude: {location.lng}\nCity: {location.city}"
+            geolocation_label.config(text=location_info)
         else:
-            geolocation_label.config(text="Unable to retrieve IPv4 address")
+            geolocation_label.config(text="Unable to retrieve current location")
     except Exception as e:
         geolocation_label.config(text="Error: " + str(e))
 
@@ -151,9 +129,9 @@ get_ipv6_button.pack()
 geolocation_label = tk.Label(root, text="")
 geolocation_label.pack(pady=10)
 
-# Button to fetch geolocation for specific IP addresses
-get_geolocation_button = tk.Button(root, text="Get Geolocation for Specific IP", command=get_geolocation)
-get_geolocation_button.pack()
+# Button to fetch current location
+get_current_location_button = tk.Button(root, text="Get Current Location", command=get_current_location)
+get_current_location_button.pack()
 
 # Run the Tkinter event loop
 root.mainloop()
