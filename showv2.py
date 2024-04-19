@@ -7,6 +7,7 @@ import psutil
 from PIL import Image, ImageTk
 import geocoder
 import urllib.request
+import math
 
 # Google Maps Geocoding API key
 API_KEY = "AIzaSyDhSP746m4Au8CgZBZUMBjtPL2nfNTr2mQ"
@@ -75,7 +76,11 @@ def get_ipv6_address():
         ipv6_label.config(text="No IPv6 address found")
 
 def get_current_location():
+    global location_image_label
     try:
+        # Display a loading message
+        geolocation_label.config(text="Fetching location...")
+
         # Get current location using geocoder
         location = geocoder.ip('me')
 
@@ -117,10 +122,34 @@ def login():
     password = password_entry.get()
 
     if username == "admin" and password == "admin":
-        login_window.destroy()  # Destroy the login window after successful login
+        login_window.withdraw()  # Hide the login window after successful login
         root.deiconify()
     else:
         messagebox.showerror("Login failed", "Invalid username or password")
+
+def logout():
+    # Reset labels
+    ipv4_label.config(text="")
+    ipv6_label.config(text="")
+    geolocation_label.config(text="")
+    # Clear canvas
+    canvas.delete("loading_spinner")
+    # Hide the main window
+    root.withdraw()
+    # Show the login window
+    login_window.deiconify()
+
+def draw_loading_spinner(canvas, x, y, radius=20, num_lines=12, line_length=10, line_width=2, speed=1):
+    global angle
+    angle += 1
+    angle %= 360
+    angle_radians = angle * math.pi / 180
+    canvas.delete("loading_spinner")  # Clear previous drawings
+    for i in range(num_lines):
+        angle_degrees = i * (360 / num_lines)
+        end_x = x + radius * math.cos(math.radians(angle_degrees + angle))
+        end_y = y + radius * math.sin(math.radians(angle_degrees + angle))
+        canvas.create_line(x, y, end_x, end_y, width=line_width, fill="blue", tags="loading_spinner")
 
 # Create the main window
 root = tk.Tk()
@@ -146,7 +175,7 @@ ipv4_label = tk.Label(root, text="", font=("Arial", 12))
 ipv4_label.pack(pady=10)
 
 # Create buttons to show current IPv4
-get_ipv4_button = tk.Button(root, text="Show Current IPv4", command=lambda: get_current_ip("Ethernet"), font=("Arial", 12))  # Change "Ethernet" to your network interface name
+get_ipv4_button = tk.Button(root, text="Show Current IPv4", command=lambda: root.after(100, get_current_ip, "Ethernet"), font=("Arial", 12))  # Change "Ethernet" to your network interface name
 get_ipv4_button.pack()
 
 # Create a label to display IPv6 addresses
@@ -154,7 +183,7 @@ ipv6_label = tk.Label(root, text="", font=("Arial", 12))
 ipv6_label.pack(pady=10)
 
 # Create buttons to show current IPv6
-get_ipv6_button = tk.Button(root, text="Show Current IPv6", command=get_ipv6_address, font=("Arial", 12))
+get_ipv6_button = tk.Button(root, text="Show Current IPv6", command=lambda: root.after(100, get_ipv6_address), font=("Arial", 12))
 get_ipv6_button.pack()
 
 # Create a label to display geolocation information
@@ -162,12 +191,22 @@ geolocation_label = tk.Label(root, text="", font=("Arial", 12))
 geolocation_label.pack(pady=10)
 
 # Button to fetch current location
-get_current_location_button = tk.Button(root, text="Get Current Location", command=get_current_location, font=("Arial", 12))
+get_current_location_button = tk.Button(root, text="Get Current Location", command=lambda: root.after(100, get_current_location), font=("Arial", 12))
 get_current_location_button.pack()
 
+# Create a canvas to draw the loading spinner
+canvas = tk.Canvas(root, width=40, height=40)
+canvas.pack(pady=10)
+angle = 0
+draw_loading_spinner(canvas, 20, 20)
+
 # Create a label to display the location image
-location_image_label = tk.Label(root, font=("Arial", 12))
-location_image_label.pack()
+location_image_label = tk.Label(root)
+location_image_label.pack(pady=10)
+
+# Button to logout
+logout_button = tk.Button(root, text="Logout", command=logout, font=("Arial", 12))
+logout_button.pack()
 
 # Hide the main window initially
 root.withdraw()
