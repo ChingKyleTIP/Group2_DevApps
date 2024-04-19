@@ -1,4 +1,3 @@
-#try pull
 import tkinter as tk
 from tkinter import messagebox
 import socket
@@ -13,7 +12,7 @@ import math
 # Google Maps Geocoding API key
 API_KEY = "AIzaSyDhSP746m4Au8CgZBZUMBjtPL2nfNTr2mQ"
 
-def print_network_interfaces():
+def test_print_network_interfaces():
     for interface, addrs in psutil.net_if_addrs().items():
         print(f"Interface: {interface}")
         for addr in addrs:
@@ -25,7 +24,7 @@ def print_network_interfaces():
             print(f"  MAC: {addr.address}")
         print()
 
-def get_current_ip(target_interface):
+def test_get_current_ip(target_interface):
     try:
         ip_address = ""
         for interface, addrs in psutil.net_if_addrs().items():
@@ -63,7 +62,7 @@ def get_current_ip(target_interface):
     except Exception as e:
         ipv4_label.config(text="Error: " + str(e))
 
-def get_ipv6_address():
+def test_get_ipv6_address():
     # Get the current IPv6 address of the machine
     ipv6_addresses = [addrinfo[4][0] for addrinfo in socket.getaddrinfo(socket.gethostname(), None) if addrinfo[0] == socket.AF_INET6]
     if ipv6_addresses:
@@ -76,7 +75,7 @@ def get_ipv6_address():
     else:
         ipv6_label.config(text="No IPv6 address found")
 
-def get_current_location():
+def test_get_current_location():
     global location_image_label
     try:
         # Display a loading message
@@ -118,7 +117,7 @@ def get_current_location():
     except Exception as e:
         geolocation_label.config(text="Error: " + str(e))
 
-def login():
+def test_login():
     username = username_entry.get()
     password = password_entry.get()
 
@@ -128,7 +127,7 @@ def login():
     else:
         messagebox.showerror("Login failed", "Invalid username or password")
 
-def logout():
+def test_logout():
     # Reset labels
     ipv4_label.config(text="")
     ipv6_label.config(text="")
@@ -150,7 +149,7 @@ def check_connection():
     except Exception as e:
         messagebox.showerror("Connection Status", f"Error: {e}")
 
-def draw_loading_spinner(canvas, x, y, radius=20, num_lines=12, line_length=10, line_width=2, speed=1):
+def test_draw_loading_spinner(canvas, x, y, radius=20, num_lines=12, line_length=10, line_width=2, speed=1):
     global angle
     angle += 1
     angle %= 360
