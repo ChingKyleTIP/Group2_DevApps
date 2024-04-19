@@ -139,6 +139,16 @@ def logout():
     # Show the login window
     login_window.deiconify()
 
+def check_connection():
+    try:
+        response = requests.get("http://www.google.com", timeout=5)
+        if response.status_code == 200:
+            messagebox.showinfo("Connection Status", "Connected to the internet!")
+        else:
+            messagebox.showerror("Connection Status", "Unable to connect to the internet")
+    except Exception as e:
+        messagebox.showerror("Connection Status", f"Error: {e}")
+
 def draw_loading_spinner(canvas, x, y, radius=20, num_lines=12, line_length=10, line_width=2, speed=1):
     global angle
     angle += 1
@@ -170,43 +180,51 @@ try:
 except Exception as e:
     print("Error loading background image:", e)
 
+# Create frame to hold connection checker, IPv4, IPv6, and location information
+info_frame = tk.Frame(root)
+info_frame.pack(side=tk.RIGHT, padx=20, pady=20, anchor=tk.NE)
+
 # Create a label to display IPv4 addresses
-ipv4_label = tk.Label(root, text="", font=("Arial", 12))
+ipv4_label = tk.Label(info_frame, text="", font=("Arial", 12))
 ipv4_label.pack(pady=10)
 
 # Create buttons to show current IPv4
-get_ipv4_button = tk.Button(root, text="Show Current IPv4", command=lambda: root.after(100, get_current_ip, "Ethernet"), font=("Arial", 12))  # Change "Ethernet" to your network interface name
+get_ipv4_button = tk.Button(info_frame, text="Show Current IPv4", command=lambda: root.after(100, get_current_ip, "Ethernet"), font=("Arial", 12))  # Change "Ethernet" to your network interface name
 get_ipv4_button.pack()
 
 # Create a label to display IPv6 addresses
-ipv6_label = tk.Label(root, text="", font=("Arial", 12))
+ipv6_label = tk.Label(info_frame, text="", font=("Arial", 12))
 ipv6_label.pack(pady=10)
 
 # Create buttons to show current IPv6
-get_ipv6_button = tk.Button(root, text="Show Current IPv6", command=lambda: root.after(100, get_ipv6_address), font=("Arial", 12))
+get_ipv6_button = tk.Button(info_frame, text="Show Current IPv6", command=lambda: root.after(100, get_ipv6_address), font=("Arial", 12))
 get_ipv6_button.pack()
 
 # Create a label to display geolocation information
-geolocation_label = tk.Label(root, text="", font=("Arial", 12))
+geolocation_label = tk.Label(info_frame, text="", font=("Arial", 12))
 geolocation_label.pack(pady=10)
 
 # Button to fetch current location
-get_current_location_button = tk.Button(root, text="Get Current Location", command=lambda: root.after(100, get_current_location), font=("Arial", 12))
+get_current_location_button = tk.Button(info_frame, text="Get Current Location", command=lambda: root.after(100, get_current_location), font=("Arial", 12))
 get_current_location_button.pack()
 
 # Create a canvas to draw the loading spinner
-canvas = tk.Canvas(root, width=40, height=40)
+canvas = tk.Canvas(info_frame, width=40, height=40)
 canvas.pack(pady=10)
 angle = 0
 draw_loading_spinner(canvas, 20, 20)
 
 # Create a label to display the location image
-location_image_label = tk.Label(root)
+location_image_label = tk.Label(info_frame)
 location_image_label.pack(pady=10)
 
 # Button to logout
 logout_button = tk.Button(root, text="Logout", command=logout, font=("Arial", 12))
-logout_button.pack()
+logout_button.pack(side=tk.TOP, padx=20, pady=20, anchor=tk.NW)
+
+# Button to check internet connection
+connection_checker_button = tk.Button(root, text="Check Connection", command=check_connection, font=("Arial", 12))
+connection_checker_button.pack(side=tk.TOP, padx=20, pady=20, anchor=tk.NE)
 
 # Hide the main window initially
 root.withdraw()
