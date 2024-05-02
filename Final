@@ -10,7 +10,7 @@ import urllib.request
 import math
 
 # Google Maps Geocoding API key
-API_KEY = "AIzaSyDhSP746m4Au8CgZBZUMBjtPL2nfNTr2mQ"
+API_KEY = "AIzaSyB5jergBYNPoLEVw9EveWwEFAbs14bNWcg"
 
 def print_network_interfaces():
     for interface, addrs in psutil.net_if_addrs().items():
